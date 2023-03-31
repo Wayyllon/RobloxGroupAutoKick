@@ -1,0 +1,103 @@
+#Simple Python script for blacklisting users from roblox groups, to keep them from joining back for too long after getting put on this list.
+#Please note that this is the first time I have ever worked with Https requests & it is extremely likely that there are either bugs or inefficiencies in the code.
+#What I do know is that it works (as far as im aware) & nobody wants to learn a programming language for the sole purpose of kicking people from their roblox group. 💀
+
+#Variables
+BlackListedGroupId = 0 #The id of the group you're trying to remove users from.
+BlackListedUserIds = {00000,000000} #To add a new one just throw in a comma then the user id.
+DelayTime = 120 #The time you would like in between checks of the group to see if it finds violating members, in seconds.
+RemoveWallPosts = True
+Cookies = "Put the entirety of the roblox cookie here, starting with _|WARNING, & ending with a random character."
+
+#DO NOT TOUCH
+
+#Requirements
+import requests
+import time
+import random
+
+#Static Variables
+TimesExiled = 0
+TimesIterated = 0
+
+Session = requests.Session()
+Session.cookies[".ROBLOSECURITY"] = Cookies
+
+def ReValidateSession():
+    SessionRequest1 = Session.post(
+        url="https://auth.roblox.com/"
+    )
+    if "X-CSRF-Token" in SessionRequest1.headers:  # check if token is in response headers
+        Session.headers["X-CSRF-Token"] = SessionRequest1.headers["X-CSRF-Token"]  # store the response header in the session
+        print("Generated New Token")
+
+def DeletePost(GroupId,UserId):
+    DeleteResponse = Session.delete(
+        url="https://groups.roblox.com/v1/groups/"+str(BlackListedGroupId)+"/wall/users/"+str(UserId)+"/posts"
+    )
+    print(DeleteResponse)
+    if DeleteResponse != 200:
+        if DeleteResponse == 403:
+            print("ReValidating Session & Retrying.")
+            ReValidateSession()
+            DeletePost(GroupId,UserId)
+    else:
+        print("Successfully filtered wall posts.")
+
+def FilterWall():
+    UserIdsToDelete = []
+    Posts = Session.get(
+        url="https://groups.roblox.com/v1/groups/"+str(BlackListedGroupId)+"/wall/posts?limit=100&sortOrder=Desc"
+    )
+    Data = Posts.json()
+    Posts = Data["data"]
+    for Item in Posts:
+        PosterData = Item["poster"]
+        if PosterData != None:
+           PosterId = PosterData["userId"]
+           if PosterId != None:
+                for BlacklistedUUID in BlackListedUserIds:
+                    if PosterId == BlacklistedUUID:
+                        DuplicateFound = False
+                        for DeleteListId in UserIdsToDelete:
+                            if PosterId == DeleteListId:
+                                DuplicateFound = True
+                        if DuplicateFound == False:
+                            list.append(UserIdsToDelete,PosterId)
+    for PostsToDelete in UserIdsToDelete:
+        DeletePost(BlackListedGroupId,PostsToDelete)
+        print("sent delete req")
+    for PostToDelete in UserIdsToDelete:
+        DeleteResponse = Session.delete(
+            url="https://groups.roblox.com/v1/groups/"+str(BlackListedGroupId)+"/wall/users/"+str(PostToDelete)+"/posts"
+        )
+        if DeleteResponse != 200:
+            if DeleteResponse == 403:
+                pass
+
+def KickUser(GroupId,UserId):
+    Request = Session.delete("https://groups.roblox.com/v1/groups/"+str(GroupId)+"/users/"+str(UserId))
+    if Request != 200:
+        if Request == 403:
+            ReValidateSession()
+            KickUser(GroupId,UserId)
+
+#Runtime
+
+while True:
+    TimesIterated = TimesIterated+1
+    print("Checking, iteration "+str(TimesIterated))
+    if TimesIterated % 10 == 0 and TimesIterated != 0:
+        ReValidateSession()
+    for UUID in BlackListedUserIds:
+        UserGroupsDataRAW = requests.get("https://groups.roblox.com/v2/users/"+str(UUID)+"/groups/roles")
+        UserGroupsData = UserGroupsDataRAW.json()
+        for Item in UserGroupsData["data"]:
+            Group = Item["group"]
+            Id = Group["id"]
+            if BlackListedGroupId == Id:
+                TimesExiled= TimesExiled+1
+                print("Match #"+str(TimesExiled)+" found, Exiling.")
+                KickUser(BlackListedGroupId,UUID)
+                FilterWall()
+    time.sleep(DelayTime)
