@@ -9,7 +9,7 @@ SETUP:
 
 **Install python, preferably the latest version, from here: https://www.python.org/downloads/**
 
-**In a command prompt, tpye in the following:** *"pip install requests"* **& press enter.**
+**In a command prompt, type in the following:** *"pip install requests"* **& press enter.**
 
 *In some cases python doesnt correctly install pip, you're on your own for that one, try looking around on the internet.*
 
