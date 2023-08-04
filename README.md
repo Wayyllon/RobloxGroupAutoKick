@@ -2,7 +2,7 @@
 A simple Python script which automatically kicks players from a roblox group. It doesnt do much, its a simple, no BS, self hosted, group auto kicker.
 
 **NOTE:**
-! This script has limitations, if you are using it to automatically delete posts by the user, it will only check 100 posts back, if their post is more than 100 posts old it will not be deleted by the script.
+! This script has also deletes the posts of kicked users. 
 
 ! I'm not an expert, & this script is probably inefficient as fuck, but it works.
 
