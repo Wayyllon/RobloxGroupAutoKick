@@ -4,7 +4,7 @@ A simple Python script which automatically kicks players from a roblox group. It
 **NOTE:**
 ! This script has also deletes the posts of kicked users. 
 
-! I'm not an expert, & this script is probably inefficient as fuck, but it works.
+! I'm not an expert, & this script is probably inefficient as shit, but it works.
 
 ! This will only work if the computer running the code is on.
 
